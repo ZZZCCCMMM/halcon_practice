@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="23.05.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<l>A:=[]</l>
+<l>B:=[]</l>
+<l>C:=[]</l>
+<l>D:=[]</l>
+<l>E:=[]</l>
+<l>dev_update_off ()</l>
+<l>for I := 1 to 12 by 1</l>
+<c></c>
+<l>    read_image (Image, 'D:/desk/相机标定/任务/1/1 ('+I+').bmp')</l>
+<l>    emphasize (Image, ImageEmphasize, 7, 7, 1)</l>
+<l>    threshold (Image, Region, 50, 230)</l>
+<l>    fill_up_shape (Region, RegionFillUp, 'area', 1, 500)</l>
+<l>    opening_rectangle1 (Region, RegionOpening, 5, 15)</l>
+<l>    connection (RegionOpening, ConnectedRegions)</l>
+<l>    select_shape (ConnectedRegions, SelectedRegions, 'area', 'and', 150000, 300000)   </l>
+<l>    shape_trans (SelectedRegions, RegionTrans, 'rectangle2')</l>
+<l>    smallest_rectangle2 (RegionTrans, T_Row, T_Column, T_Phi, T_Length1, T_Length2)</l>
+<c>    *仿射变换</c>
+<l>    hom_mat2d_identity (HomMat2DIdentity)</l>
+<l>    hom_mat2d_rotate (HomMat2DIdentity, -T_Phi, T_Column, T_Row, HomMat2DRotate)</l>
+<l>    affine_trans_image (Image, ImageAffineTrans, HomMat2DRotate, 'constant', 'false')</l>
+<l>    affine_trans_region (SelectedRegions, RegionAffineTrans_1, HomMat2DRotate, 'constant')</l>
+<c>    </c>
+<c>    *获取B值</c>
+<l>    smallest_rectangle2 (RegionAffineTrans_1, T1_Row, T1_Column, T1_Phi, T1_Length1, T1_Length2)</l>
+<l>    B:=[B,T1_Length1]</l>
+<c>    *检测是否正反</c>
+<c>    </c>
+<c>    </c>
+<l>    gen_rectangle2 (Rectangle_Aff, T1_Row, T1_Column, T1_Phi, T1_Length1, T1_Length2)</l>
+<l>    partition_rectangle (Rectangle_Aff, Partitioned, 600, 450)</l>
+<l>    smallest_rectangle1 (Partitioned, Row1, Column1, Row2, Column2)</l>
+<l>    gen_rectangle1 (Rectangle, Row1, Column1, Row2, Column2)</l>
+<l>    crop_rectangle1 (ImageAffineTrans, ImagePart, Row1[0], Column1[0], Row2[0], Column2[0])</l>
+<l>    threshold (ImagePart, Regions, 40, 200)</l>
+<l>    fill_up (Regions, RegionFillUp1)</l>
+<l>    area_center (RegionFillUp1, Area, Row, Column)</l>
+<l>    if (Area&gt;60000)</l>
+<l>       rotate_image (Image, Image_Rotate, 180, 'constant')</l>
+<l>       threshold (Image_Rotate, Region, 50, 230)</l>
+<l>       fill_up_shape (Region, RegionFillUp, 'area', 1, 500)</l>
+<l>       opening_rectangle1 (Region, RegionOpening, 5, 15)</l>
+<l>       connection (RegionOpening, ConnectedRegions)</l>
+<l>       select_shape (ConnectedRegions, SelectedRegions, 'area', 'and', 150000, 300000)   </l>
+<l>       shape_trans (SelectedRegions, RegionTrans, 'rectangle2')</l>
+<l>       smallest_rectangle2 (RegionTrans, T_Row, T_Column, T_Phi, T_Length1, T_Length2)</l>
+<c>    *仿射变换</c>
+<l>       hom_mat2d_identity (HomMat2DIdentity)</l>
+<l>       hom_mat2d_rotate (HomMat2DIdentity, -T_Phi, T_Column, T_Row, HomMat2DRotate)</l>
+<l>       affine_trans_image (Image_Rotate, ImageAffineTrans, HomMat2DRotate, 'constant', 'false')</l>
+<l>       affine_trans_region (SelectedRegions, RegionAffineTrans_1, HomMat2DRotate, 'constant')</l>
+<c>    *获取B值</c>
+<l>       smallest_rectangle2 (RegionAffineTrans_1, T1_Row, T1_Column, T1_Phi, T1_Length1, T1_Length2)</l>
+<l>       B:=[B,T1_Length1]</l>
+<c></c>
+<l>    endif</l>
+<c>    *measure助手</c>
+<l>    AmplitudeThreshold := 11</l>
+<l>    RoiWidthLen2 := 15</l>
+<l>    set_system ('int_zooming', 'true')</l>
+<l>    for i := 1 to 3 by 1</l>
+<l>        if (i=1)</l>
+<l>            LineRowStart_Measure_01_1:=T1_Row-70</l>
+<l>            LineColumnStart_Measure_01_1 := T1_Column-400</l>
+<l>            LineRowEnd_Measure_01_1:=T1_Row-70</l>
+<l>            LineColumnEnd_Measure_01_1 := T1_Column+700</l>
+<l>            measure_A_length (ImageAffineTrans, RegionLines, LineRowStart_Measure_01_1, LineColumnStart_Measure_01_1, LineRowEnd_Measure_01_1, LineColumnEnd_Measure_01_1, RoiWidthLen2, AmplitudeThreshold, A_Measure, Column1_Measure_01_11)</l>
+<l>            A:=[A,A_Measure]</l>
+<l>            C:=[C,Column1_Measure_01_11-Column1[0]]            </l>
+<l>        elseif (i=2)</l>
+<l>            measure_D_length (ImageAffineTrans, RegionLines, T1_Row, T1_Column, RoiWidthLen2, AmplitudeThreshold, LineRowStart_Measure_01_1, LineColumnStart_Measure_01_1, LineRowEnd_Measure_01_1, LineColumnEnd_Measure_01_1, TmpCtrl_Row, TmpCtrl_Column, TmpCtrl_Dr, TmpCtrl_Dc, TmpCtrl_Phi, TmpCtrl_Len1, TmpCtrl_Len2, MsrHandle_Measure_01_1, FuzzyThreshold, TmpCtrl_FunctionSize, Row1_Measure_01_1, Column1_Measure_01_1, Amplitude1_Measure_01_1, Row2_Measure_01_1, Column2_Measure_01_1, Amplitude2_Measure_01_1, TmpCtrl_RowCenter, TmpCtrl_ColumnCenter, Score_Measure_01_1, D_Measure, Distance_Measure_01_1)</l>
+<l>            D:=[D,D_Measure]</l>
+<l>        else</l>
+<l>            measure_E_length (ImageAffineTrans, RegionLines, T1_Row, T1_Column, RoiWidthLen2, AmplitudeThreshold, E_Measure)</l>
+<l>            E:=[E,E_Measure[0]]</l>
+<l>        endif          </l>
+<l>    endfor</l>
+<l>    dev_close_window ()</l>
+<c>    </c>
+<l>    dev_open_window (0, 0, 512, 512, 'black', WindowHandle1)</l>
+<l>    dev_get_window (WindowHandle)</l>
+<l>    dev_display (Image)</l>
+<l>    disp_message (WindowHandle, 'A := '+A[I-1], 'window', 0, 100, 'black', 'true')</l>
+<l>    disp_message (WindowHandle, 'B := '+B[I-1], 'window', 50, 100, 'black', 'true')</l>
+<l>    disp_message (WindowHandle, 'C := '+C[I-1], 'window', 100, 100, 'black', 'true')</l>
+<l>    disp_message (WindowHandle, 'D := '+D[I-1], 'window', 150, 100, 'black', 'true')</l>
+<l>    disp_message (WindowHandle, 'E := '+E[I-1], 'window', 200, 100, 'black', 'true')</l>
+<l>    stop ()</l>
+<c> </c>
+<c>    </c>
+<l>endfor</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+<procedure name="measure_A_length">
+<interface>
+<io>
+<par name="ImageAffineTrans" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="RegionLines" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="LineRowStart_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineColumnStart_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineRowEnd_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineColumnEnd_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="RoiWidthLen2" base_type="ctrl" dimension="0"/>
+<par name="AmplitudeThreshold" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="A_Measure" base_type="ctrl" dimension="0"/>
+<par name="Column1_Measure_01_1" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>gen_region_line (RegionLines, LineRowStart_Measure_01_1, LineColumnStart_Measure_01_1\
+, LineRowEnd_Measure_01_1, LineColumnEnd_Measure_01_1)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="2">TmpCtrl_Row := 0.5*(LineRowStart_Measure_01_1+LineRowEnd_Measure_01_1)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="3">TmpCtrl_Column := 0.5*(LineColumnStart_Measure_01_1+LineColumnEnd_Measure_01_1)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="4">TmpCtrl_Dr := LineRowStart_Measure_01_1-LineRowEnd_Measure_01_1</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="5">TmpCtrl_Dc := LineColumnEnd_Measure_01_1-LineColumnStart_Measure_01_1</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="6">TmpCtrl_Phi := atan2(TmpCtrl_Dr, TmpCtrl_Dc)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="7">TmpCtrl_Len1 := 0.5*sqrt(TmpCtrl_Dr*TmpCtrl_Dr + TmpCtrl_Dc*TmpCtrl_Dc)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="8">TmpCtrl_Len2 := RoiWidthLen2</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,3]" as_ord="11">gen_measure_rectangle2 (TmpCtrl_Row, TmpCtrl_Column, TmpCtrl_Phi, TmpCtrl_Len1, TmpCtrl_Len2, 3072, 2048, 'bicubic', MsrHandle_Measure_01_1)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,4]" as_ord="2">FuzzyThreshold := 0.6</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,4]" as_ord="3">create_funct_1d_pairs ([55,57.5], [0,1], TmpCtrl_FunctionSize)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[2,4]" as_ord="4">set_fuzzy_measure (MsrHandle_Measure_01_1, 'size', TmpCtrl_FunctionSize)</l>
+<l as_id="measure1d" as_name="Measure 01" as_grp="[4,3]" as_ord="1">fuzzy_measure_pairs (ImageAffineTrans, MsrHandle_Measure_01_1, 3.4, AmplitudeThreshold, 0.6, 'all', Row1_Measure_01_1, Column1_Measure_01_1, Amplitude1_Measure_01_1, Row2_Measure_01_1, Column2_Measure_01_1, Amplitude2_Measure_01_1, TmpCtrl_RowCenter, TmpCtrl_ColumnCenter, Score_Measure_01_1, A_Measure, Distance_Measure_01_1)</l>
+<c></c>
+<l>return ()</l>
+</body>
+<docu id="measure_A_length">
+<parameters>
+<parameter id="A_Measure"/>
+<parameter id="AmplitudeThreshold"/>
+<parameter id="Column1_Measure_01_1"/>
+<parameter id="ImageAffineTrans"/>
+<parameter id="LineColumnEnd_Measure_01_1"/>
+<parameter id="LineColumnStart_Measure_01_1"/>
+<parameter id="LineRowEnd_Measure_01_1"/>
+<parameter id="LineRowStart_Measure_01_1"/>
+<parameter id="RegionLines"/>
+<parameter id="RoiWidthLen2"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="measure_D_length">
+<interface>
+<io>
+<par name="ImageAffineTrans" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="RegionLines" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="T1_Row" base_type="ctrl" dimension="0"/>
+<par name="T1_Column" base_type="ctrl" dimension="0"/>
+<par name="RoiWidthLen2" base_type="ctrl" dimension="0"/>
+<par name="AmplitudeThreshold" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="LineRowStart_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineColumnStart_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineRowEnd_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="LineColumnEnd_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Row" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Column" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Dr" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Dc" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Phi" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Len1" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_Len2" base_type="ctrl" dimension="0"/>
+<par name="MsrHandle_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="FuzzyThreshold" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_FunctionSize" base_type="ctrl" dimension="0"/>
+<par name="Row1_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="Column1_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="Amplitude1_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="Row2_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="Column2_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="Amplitude2_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_RowCenter" base_type="ctrl" dimension="0"/>
+<par name="TmpCtrl_ColumnCenter" base_type="ctrl" dimension="0"/>
+<par name="Score_Measure_01_1" base_type="ctrl" dimension="0"/>
+<par name="D_Measure" base_type="ctrl" dimension="0"/>
+<par name="Distance_Measure_01_1" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>LineRowStart_Measure_01_1 := T1_Row-100</l>
+<l>LineColumnStart_Measure_01_1 := T1_Column+730</l>
+<l>LineRowEnd_Measure_01_1 := T1_Row+100</l>
+<l>LineColumnEnd_Measure_01_1 := T1_Column+730</l>
+<c></c>
+<l>gen_region_line (RegionLines, LineRowStart_Measure_01_1, LineColumnStart_Measure_01_1\
+, LineRowEnd_Measure_01_1, LineColumnEnd_Measure_01_1)</l>
+<l>TmpCtrl_Row := 0.5*(LineRowStart_Measure_01_1+LineRowEnd_Measure_01_1)</l>
+<l>TmpCtrl_Column := 0.5*(LineColumnStart_Measure_01_1+LineColumnEnd_Measure_01_1)</l>
+<l>TmpCtrl_Dr := LineRowStart_Measure_01_1-LineRowEnd_Measure_01_1</l>
+<l>TmpCtrl_Dc := LineColumnEnd_Measure_01_1-LineColumnStart_Measure_01_1</l>
+<l>TmpCtrl_Phi := atan2(TmpCtrl_Dr, TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len1 := 0.5*sqrt(TmpCtrl_Dr*TmpCtrl_Dr + TmpCtrl_Dc*TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len2 := RoiWidthLen2</l>
+<l>gen_measure_rectangle2 (TmpCtrl_Row, TmpCtrl_Column, TmpCtrl_Phi, TmpCtrl_Len1, TmpCtrl_Len2, 3072, 2048, 'bicubic', MsrHandle_Measure_01_1)</l>
+<l>FuzzyThreshold := 0.6</l>
+<l>create_funct_1d_pairs ([55,57.5], [0,1], TmpCtrl_FunctionSize)</l>
+<l>set_fuzzy_measure (MsrHandle_Measure_01_1, 'size', TmpCtrl_FunctionSize)</l>
+<c></c>
+<l>fuzzy_measure_pairs (ImageAffineTrans, MsrHandle_Measure_01_1, 0.8, AmplitudeThreshold, 0.6, 'all', Row1_Measure_01_1, Column1_Measure_01_1, Amplitude1_Measure_01_1, Row2_Measure_01_1, Column2_Measure_01_1, Amplitude2_Measure_01_1, TmpCtrl_RowCenter, TmpCtrl_ColumnCenter, Score_Measure_01_1, D_Measure, Distance_Measure_01_1)</l>
+<l>return ()</l>
+</body>
+<docu id="measure_D_length">
+<parameters>
+<parameter id="Amplitude1_Measure_01_1"/>
+<parameter id="Amplitude2_Measure_01_1"/>
+<parameter id="AmplitudeThreshold"/>
+<parameter id="Column1_Measure_01_1"/>
+<parameter id="Column2_Measure_01_1"/>
+<parameter id="D_Measure"/>
+<parameter id="Distance_Measure_01_1"/>
+<parameter id="FuzzyThreshold"/>
+<parameter id="ImageAffineTrans"/>
+<parameter id="LineColumnEnd_Measure_01_1"/>
+<parameter id="LineColumnStart_Measure_01_1"/>
+<parameter id="LineRowEnd_Measure_01_1"/>
+<parameter id="LineRowStart_Measure_01_1"/>
+<parameter id="MsrHandle_Measure_01_1"/>
+<parameter id="RegionLines"/>
+<parameter id="RoiWidthLen2"/>
+<parameter id="Row1_Measure_01_1"/>
+<parameter id="Row2_Measure_01_1"/>
+<parameter id="Score_Measure_01_1"/>
+<parameter id="T1_Column"/>
+<parameter id="T1_Row"/>
+<parameter id="TmpCtrl_Column"/>
+<parameter id="TmpCtrl_ColumnCenter"/>
+<parameter id="TmpCtrl_Dc"/>
+<parameter id="TmpCtrl_Dr"/>
+<parameter id="TmpCtrl_FunctionSize"/>
+<parameter id="TmpCtrl_Len1"/>
+<parameter id="TmpCtrl_Len2"/>
+<parameter id="TmpCtrl_Phi"/>
+<parameter id="TmpCtrl_Row"/>
+<parameter id="TmpCtrl_RowCenter"/>
+</parameters>
+</docu>
+</procedure>
+<procedure name="measure_E_length">
+<interface>
+<io>
+<par name="ImageAffineTrans" base_type="iconic" dimension="0"/>
+</io>
+<oo>
+<par name="RegionLines" base_type="iconic" dimension="0"/>
+</oo>
+<ic>
+<par name="T1_Row" base_type="ctrl" dimension="0"/>
+<par name="T1_Column" base_type="ctrl" dimension="0"/>
+<par name="RoiWidthLen2" base_type="ctrl" dimension="0"/>
+<par name="AmplitudeThreshold" base_type="ctrl" dimension="0"/>
+</ic>
+<oc>
+<par name="E_Measure" base_type="ctrl" dimension="0"/>
+</oc>
+</interface>
+<body>
+<l>LineRowStart_Measure_01_1 := T1_Row-130</l>
+<l>LineColumnStart_Measure_01_1 := T1_Column</l>
+<l>LineRowEnd_Measure_01_1 := T1_Row+130</l>
+<l>LineColumnEnd_Measure_01_1 := T1_Column</l>
+<l>gen_region_line (RegionLines, LineRowStart_Measure_01_1, LineColumnStart_Measure_01_1\
+, LineRowEnd_Measure_01_1, LineColumnEnd_Measure_01_1)</l>
+<l>TmpCtrl_Row := 0.5*(LineRowStart_Measure_01_1+LineRowEnd_Measure_01_1)</l>
+<l>TmpCtrl_Column := 0.5*(LineColumnStart_Measure_01_1+LineColumnEnd_Measure_01_1)</l>
+<l>TmpCtrl_Dr := LineRowStart_Measure_01_1-LineRowEnd_Measure_01_1</l>
+<l>TmpCtrl_Dc := LineColumnEnd_Measure_01_1-LineColumnStart_Measure_01_1</l>
+<l>TmpCtrl_Phi := atan2(TmpCtrl_Dr, TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len1 := 0.5*sqrt(TmpCtrl_Dr*TmpCtrl_Dr + TmpCtrl_Dc*TmpCtrl_Dc)</l>
+<l>TmpCtrl_Len2 := RoiWidthLen2</l>
+<l>gen_measure_rectangle2 (TmpCtrl_Row, TmpCtrl_Column, TmpCtrl_Phi, TmpCtrl_Len1, TmpCtrl_Len2, 3072, 2048, 'bicubic', MsrHandle_Measure_01_1)</l>
+<l>FuzzyThreshold := 0.6</l>
+<l>create_funct_1d_pairs ([55,57.5], [0,1], TmpCtrl_FunctionSize)</l>
+<l>set_fuzzy_measure (MsrHandle_Measure_01_1, 'size', TmpCtrl_FunctionSize)</l>
+<l>fuzzy_measure_pairs (ImageAffineTrans, MsrHandle_Measure_01_1, 3.4, AmplitudeThreshold, 0.6, 'all', Row1_Measure_01_1, Column1_Measure_01_1, Amplitude1_Measure_01_1, Row2_Measure_01_1, Column2_Measure_01_1, Amplitude2_Measure_01_1, TmpCtrl_RowCenter, TmpCtrl_ColumnCenter, Score_Measure_01_1, E_Measure, Distance_Measure_01_1)</l>
+<c></c>
+<l>return ()</l>
+<l>return ()</l>
+</body>
+<docu id="measure_E_length">
+<parameters>
+<parameter id="AmplitudeThreshold"/>
+<parameter id="E_Measure"/>
+<parameter id="ImageAffineTrans"/>
+<parameter id="RegionLines"/>
+<parameter id="RoiWidthLen2"/>
+<parameter id="T1_Column"/>
+<parameter id="T1_Row"/>
+</parameters>
+</docu>
+</procedure>
+</hdevelop>

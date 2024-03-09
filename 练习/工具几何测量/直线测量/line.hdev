@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="23.05.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<l>dev_close_window ()</l>
+<l>dev_update_window ('off')</l>
+<l>read_image (Image, 'D:/desk/相机标定/任务/直线测量/直线测量.png')</l>
+<l>rgb1_to_gray (Image, GrayImage)</l>
+<l>get_image_size (GrayImage, Width, Height)</l>
+<l>dev_open_window (0, 0, Width, Height, 'black', WindowHandle)</l>
+<l>dev_display (GrayImage)</l>
+<c>*提取物体</c>
+<l>threshold (GrayImage, Region, 0, 100)</l>
+<c>*闭运算填充一下</c>
+<l>closing_rectangle1 (Region, RegionClosing, 50, 50)</l>
+<c>*生成轮廓</c>
+<l>gen_contour_region_xld (RegionClosing, Contours, 'border')</l>
+<l>segment_contours_xld (Contours, ContoursSplit, 'lines', 5, 4, 2)</l>
+<c>*选择大致垂直的轮廓</c>
+<l>select_contours_xld (ContoursSplit, SelectedContours, 'direction', 3.14159/4, 3.14159*3/4, 0, 0)</l>
+<c>*将轮廓生成区域</c>
+<l>gen_region_contour_xld (SelectedContours, Region1, 'filled')</l>
+<c>*选择要测量的两个直线区域</c>
+<l>select_shape (Region1, SelectedRegionLeft, 'column1', 'and', 70, 200)</l>
+<l>select_shape (Region1, SelectedRegionRight, 'column1', 'and', 600, 900)</l>
+<c>*计算他们各自的中心点</c>
+<l>area_center (SelectedRegionLeft, Area, Row, Column)</l>
+<l>area_center (SelectedRegionRight, Area1, Row3, Column3)</l>
+<c>*将他们的中心点生成轮廓</c>
+<l>gen_contour_polygon_xld (ContourLeft, Row, Column)</l>
+<l>gen_contour_polygon_xld (ContourRight, Row3, Column3)</l>
+<c>*直线拟合一下</c>
+<l>fit_line_contour_xld (ContourLeft, 'tukey', -1, 0, 5, 2, RowBegin, ColBegin, RowEnd, ColEnd, Nr, Nc, Dist)</l>
+<l>fit_line_contour_xld (ContourRight, 'tukey', -1, 0, 5, 2, RowBegin1, ColBegin1, RowEnd1, ColEnd1, Nr1, Nc1, Dist1)</l>
+<c>*显示要测量的两条直线</c>
+<l>disp_line (WindowHandle, RowBegin, ColBegin, RowEnd, ColEnd)</l>
+<l>disp_line (WindowHandle, RowBegin1, ColBegin1, RowEnd1, ColEnd1)</l>
+<c>*计算两条之间的距离</c>
+<l>distance_ss (RowBegin, ColBegin, RowEnd, ColEnd, RowBegin1, ColBegin1, RowEnd1, ColEnd1, DistanceMin1, DistanceMax1)</l>
+<l>disp_message (WindowHandle, DistanceMin1, 'image', Height/2, Width/2, 'green', 'true')</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
